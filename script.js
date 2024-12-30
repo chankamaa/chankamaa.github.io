@@ -34,3 +34,12 @@ function toggleTheme() {
       document.documentElement.classList.add('dark');
     }
   }
+
+
+
+// Apply the correct theme on page load
+if (localStorage.theme === 'dark') {
+    document.documentElement.classList.add('dark');
+} else {
+    document.documentElement.classList.remove('dark');
+}
