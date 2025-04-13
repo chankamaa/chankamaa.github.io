@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Advanced Cracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Rocket styling with a subtle trail effect */
+    .rocket {
+      width: 10px;
+      height: 30px;
+      border-radius: 50px;
+      background-color: white;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    /* Rocket trail pseudo-element */
+    .rocket::before {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0));
+      transform: translateX(-50%);
+    }
+    /* Keyframe animation for a slow rocket ascent (6 sec) */
+    @keyframes rocket-rise {
+      0% {
+        bottom: 20px;
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+      100% {
+        bottom: 80vh;
+        opacity: 1;
+        transform: translateX(-50%) scale(1.2);
+      }
+    }
+    /* Class to start the rocket rise animation */
+    .rise {
+      animation: rocket-rise 6s ease-out forwards;
+    }
+    
+    /* Particle styling for explosion effect */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      /* Initial size will be set via JavaScript for variation */
+    }
+    /* Keyframes for explosion animation (1.2s duration, with random delay per particle) */
+    @keyframes explode {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--translateX), var(--translateY)) scale(2);
+        opacity: 0;
+      }
+    }
+    /* Class to start the explosion animation */
+    .explode {
+      animation: explode 1.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 flex flex-col items-center justify-center min-h-screen">
+  <!-- Firework Launch Button -->
+  <button id="launchButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+    Launch Firework
+  </button>
+
+  <!-- Audio elements for sounds (update the src attributes with your own files/URLs) -->
+  <audio id="launchSound" src="./mp3/Falling.mp3"></audio>
+  <audio id="explosionSound" src="./mp3/Explosion.mp3"></audio>
+
+  <script>
+    // Utility function to generate a random number between min and max
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+    
+    // Function to launch the firework
+    function launchFirework() {
+      // Play the launch sound
+      const launchSound = document.getElementById('launchSound');
+      if (launchSound) {
+        launchSound.currentTime = 0;
+        launchSound.play();
+      }
+      
+      // Create the rocket element and start the ascent
+      const rocket = document.createElement('div');
+      rocket.classList.add('rocket', 'rise');
+      document.body.appendChild(rocket);
+      
+      // Once the rocket animation completes (after 6 sec), trigger explosion at its final position
+      rocket.addEventListener('animationend', () => {
+        // Get the rocket's position using its bounding rectangle.
+        const rocketRect = rocket.getBoundingClientRect();
+        const explosionX = rocketRect.left + rocketRect.width / 2;
+        const explosionY = rocketRect.top + rocketRect.height / 2;
+        // Remove the rocket element
+        rocket.remove();
+        // Trigger the explosion effect at the rocket's final position
+        createExplosion(explosionX, explosionY);
+      });
+    }
+    
+    // Function to create explosion particles at a given (x, y) position
+    function createExplosion(x, y) {
+      // Play the explosion sound
+      const explosionSound = document.getElementById('explosionSound');
+      if (explosionSound) {
+        explosionSound.currentTime = 0;
+        explosionSound.play();
+      }
+      
+      // Define explosion parameters
+      const particleCount = 40;
+      // Array of colors for a varied explosion look
+      const colors = ["#FF3C00", "#FFB800", "#FFEE00", "#A3FF00", "#00E0FF", "#009FFF", "#AF00FF"];
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle', 'explode');
+        
+        // Set a random size for the particle between 4px and 8px
+        const size = randomBetween(4, 8);
+        particle.style.width = size + "px";
+        particle.style.height = size + "px";
+        
+        // Randomly select a color from our list
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.backgroundColor = color;
+        
+        // Position the particle at the explosion center (rocket's final position)
+        particle.style.left = (x - size / 2) + 'px';
+        particle.style.top = (y - size / 2) + 'px';
+        
+        // Randomize the particle's explosion direction and distance
+        const angle = Math.random() * 2 * Math.PI;
+        const distance = randomBetween(80, 150); // pixels
+        const translateX = Math.cos(angle) * distance;
+        const translateY = Math.sin(angle) * distance;
+        particle.style.setProperty('--translateX', translateX + 'px');
+        particle.style.setProperty('--translateY', translateY + 'px');
+        
+        // Apply a random delay (0 to 0.2 seconds) for added realism
+        particle.style.animationDelay = randomBetween(0, 0.2) + 's';
+        
+        // Append the particle to the document
+        document.body.appendChild(particle);
+        
+        // Remove the particle once its animation ends
+        particle.addEventListener('animationend', () => {
+          particle.remove();
+        });
+      }
+    }
+    
+    // Attach the launch function to the button click event
+    document.getElementById('launchButton').addEventListener('click', launchFirework);
+  </script>
+</body>
+</html>
